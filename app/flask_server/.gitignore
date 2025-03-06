@@ -1,0 +1,14 @@
+# Ignore Python virtual environment
+venv/
+__pycache__/
+
+# Ignore environment files
+.env
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore logs
+*.log

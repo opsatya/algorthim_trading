@@ -1,0 +1,22 @@
+{
+    "Stock": "Coffee Day Enterprises Limited",
+    "Ticker": "COFFEEDAY",
+    "years": {
+      "2023-24": {
+        "RevenueGrowth": "9.63%",
+        "EBITDAGrowth": "-54.5%",
+        "NetProfitMargin": "-30.34%",
+        "DebtToEquity": "0.44",
+        "InterestCoverage": "-11.44",
+        "PromoterHolding": "89.03%",
+        "EPSGrowth": "Turnaround from -3.54 to 8.08",
+        "ROCE": "-7.55%",
+        "AccountsReceivableDays": "45 days",
+        "InsiderTrades": [],
+        "RelatedPartyTransactions": "All repetitive related party transactions were conducted on an arm’s length basis; no materially significant transactions requiring shareholder approval were noted as per Annexure-VIII :contentReference[oaicite:0]{index=0}.",
+        "AuditorRemarks": "Auditors issued a disclaimer due to non-confirmation of loan balances, breaches in debt covenants, and recoverability issues from MACEL. They also emphasized material uncertainties and impairment of goodwill :contentReference[oaicite:1]{index=1}; :contentReference[oaicite:2]{index=2}.",
+        "CashFlowAnomalies": "Irregular cash flow patterns were observed, primarily due to non-recognition of interest expense amid loan recall notices and legal disputes :contentReference[oaicite:3]{index=3}."
+      }
+    }
+  }
+  

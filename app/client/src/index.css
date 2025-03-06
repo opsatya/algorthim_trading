@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: black;
+}
+
+.animate-gradient {
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.glow-text {
+  transition: text-shadow 0.3s ease;
+}
+
+.glow-container:hover .glow-text {
+  text-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.5),
+    0 0 40px rgba(59, 130, 246, 0.3),
+    0 0 60px rgba(59, 130, 246, 0.2);
+}

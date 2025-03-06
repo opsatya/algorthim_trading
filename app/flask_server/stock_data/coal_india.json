@@ -1,0 +1,138 @@
+[
+    {
+        "Stock": "Coal India Limited",
+        "Ticker": "COALINDIA",
+        "years": {
+            "2023-24": {
+                "RevenueGrowth": 5.2,
+                "EBITDAGrowth": 7.8,
+                "NetProfitMargin": 12.4,
+                "DebtToEquity": 0.3,
+                "InterestCoverage": 15.6,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": false,
+                "GeopoliticalRisk": true
+            },
+            "2022-23": {
+                "RevenueGrowth": 8.1,
+                "EBITDAGrowth": 6.5,
+                "NetProfitMargin": 11.8,
+                "DebtToEquity": 0.35,
+                "InterestCoverage": 14.2,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "increasing",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": true,
+                "GeopoliticalRisk": true
+            },
+            "2021-22": {
+                "RevenueGrowth": 6.3,
+                "EBITDAGrowth": 5.4,
+                "NetProfitMargin": 10.7,
+                "DebtToEquity": 0.4,
+                "InterestCoverage": 13.8,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": true,
+                "GeopoliticalRisk": false
+            },
+            "2020-21": {
+                "RevenueGrowth": 4.5,
+                "EBITDAGrowth": 3.9,
+                "NetProfitMargin": 9.2,
+                "DebtToEquity": 0.42,
+                "InterestCoverage": 12.7,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": true,
+                "GeopoliticalRisk": false
+            },
+            "2019-20": {
+                "RevenueGrowth": 3.7,
+                "EBITDAGrowth": 4.2,
+                "NetProfitMargin": 8.5,
+                "DebtToEquity": 0.38,
+                "InterestCoverage": 11.9,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": true,
+                "GeopoliticalRisk": false
+            },
+            "2018-19": {
+                "RevenueGrowth": 4.1,
+                "EBITDAGrowth": 5.7,
+                "NetProfitMargin": 9.1,
+                "DebtToEquity": 0.36,
+                "InterestCoverage": 12.3,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "increasing",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": false,
+                "GeopoliticalRisk": true
+            },
+            "2017-18": {
+                "RevenueGrowth": 3.8,
+                "EBITDAGrowth": 4.9,
+                "NetProfitMargin": 8.3,
+                "DebtToEquity": 0.34,
+                "InterestCoverage": 11.7,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "increasing",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": true,
+                "GeopoliticalRisk": false
+            },
+            "2016-17": {
+                "RevenueGrowth": 3.2,
+                "EBITDAGrowth": 4.4,
+                "NetProfitMargin": 7.8,
+                "DebtToEquity": 0.32,
+                "InterestCoverage": 10.9,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": false,
+                "GeopoliticalRisk": false
+            },
+            "2015-16": {
+                "RevenueGrowth": 2.9,
+                "EBITDAGrowth": 3.7,
+                "NetProfitMargin": 7.5,
+                "DebtToEquity": 0.31,
+                "InterestCoverage": 10.5,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": false,
+                "GeopoliticalRisk": false
+            },
+            "2014-15": {
+                "RevenueGrowth": 2.5,
+                "EBITDAGrowth": 3.2,
+                "NetProfitMargin": 7.1,
+                "DebtToEquity": 0.3,
+                "InterestCoverage": 10.2,
+                "PromoterHolding": 66,
+                "MarketShareGrowth": "stable",
+                "IndustryRanking": 1,
+                "DebtRisk": false,
+                "OperationalRisk": false,
+                "GeopoliticalRisk": false
+            }
+        }
+    }
+]
