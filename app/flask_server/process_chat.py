@@ -11,17 +11,19 @@ import sys
 import importlib
 
 # Define Virtual Environment Paths
-VENV_5PAISA = "/home/ubuntu/env_5paisa"
-VENV_KOTAKNEO = "/home/ubuntu/env_kotakneo"
+VENV_5PAISA = os.path.expanduser("~/env_5paisa")
+VENV_KOTAKNEO = os.path.expanduser("~/env_kotakneo")
 
-# Function to activate a virtual environment by adding its site-packages to sys.path
+# Modify activate_venv function to be more flexible
 def activate_venv(venv_path):
-    site_packages = os.path.join(venv_path, "lib", "python3.10", "site-packages")  # Adjust the Python version if needed
-    if os.path.exists(site_packages):
-        sys.path.insert(0, site_packages)
-    else:
-        print(f"[ERROR] Virtual environment not found: {venv_path}")
-        sys.exit(1)
+    # Try multiple Python versions
+    for py_version in ["python3.10", "python3.9", "python3.8"]:
+        site_packages = os.path.join(venv_path, "lib", py_version, "site-packages")
+        if os.path.exists(site_packages):
+            sys.path.insert(0, site_packages)
+            return
+    print(f"[ERROR] Virtual environment not found: {venv_path}")
+    sys.exit(1)
 # Activate 5Paisa Virtual Environment and import py5paisa
 activate_venv(VENV_5PAISA)
 try:
@@ -1049,8 +1051,8 @@ def main_chatbot():
 
     # Initialize FivePaisaClient with provided credentials
     five_paisa_cred = {
-        "APP_NAME": "5P50289032",
-        "APP_SOURCE": "22145",
+        "APP_NAME": "FIVEPAISA_APP_NAME",
+        "APP_SOURCE": "FIVEPAISA_APP_SOURCE",
         "USER_ID": "jv0zaXaW7lD",
         "PASSWORD": "ZusnUUqsJoh",
         "USER_KEY": "24BLhwIxzMHo31rotJYypWuvYUU4mCHZ",
@@ -1060,7 +1062,7 @@ def main_chatbot():
 
     # Initialize NeoAPI with separate credentials
     neo_client = NeoAPI(
-        consumer_key="fmHOCOoINQuyTfdB8S_aiiWMdlQa",
+        consumer_key="NEO_API_KEY",
         consumer_secret="xjI_osC4q4r4zkWbFpq_Vgw4LTga",
         environment='prod',
         access_token=None,
