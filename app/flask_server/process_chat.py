@@ -1,29 +1,19 @@
-import json
-import requests
 import os
-import time
-import re
-import traceback
-import glob
-from collections import defaultdict
-from functools import lru_cache
 import sys
 import importlib
 
 # Define Virtual Environment Paths
-VENV_5PAISA = os.path.expanduser("~/env_5paisa")
-VENV_KOTAKNEO = os.path.expanduser("~/env_kotakneo")
+VENV_5PAISA = "/home/flappy/env_5paisa"
+VENV_KOTAKNEO = "/home/ubuntu/env_kotakneo"
 
-# Modify activate_venv function to be more flexible
+# Function to activate a virtual environment by adding its site-packages to sys.path
 def activate_venv(venv_path):
-    # Try multiple Python versions
-    for py_version in ["python3.10", "python3.9", "python3.8"]:
-        site_packages = os.path.join(venv_path, "lib", py_version, "site-packages")
-        if os.path.exists(site_packages):
-            sys.path.insert(0, site_packages)
-            return
-    print(f"[ERROR] Virtual environment not found: {venv_path}")
-    sys.exit(1)
+    site_packages = os.path.join(venv_path, "lib", "python3.10", "site-packages")  # Adjust the Python version if needed
+    if os.path.exists(site_packages):
+        sys.path.insert(0, site_packages)
+    else:
+        print(f"[ERROR] Virtual environment not found: {venv_path}")
+        sys.exit(1)
 # Activate 5Paisa Virtual Environment and import py5paisa
 activate_venv(VENV_5PAISA)
 try:
@@ -58,6 +48,8 @@ from neo_api_client import NeoAPI
 from py5paisa import FivePaisaClient
 from collections import defaultdict
 from functools import lru_cache  # Added for caching
+from dotenv import load_dotenv
+load_dotenv()
 
 def safe_float(value, default=0.0):
     """Robust type-agnostic number conversion"""
@@ -753,25 +745,6 @@ Focus on:
 
 # Updated process_query function
 def process_query(query, stock_data, five_paisa_client, neo_client):
-        # First check for custom questions
-    custom_responses = {
-        'who built you': {
-            'response': "I was developed by Cancerian Capital Team. made by Avinash,Karan,Vedant and Satya",
-            'priority': 1
-        },
-        'parent company': {
-            'response': "My Parent Company is Cancerian Capital",
-            'priority': 1
-        },
-        'your creator': {
-            'response': "I was created by a team of full of passion for stock market",
-            'priority': 1
-        },
-        'who are you': {
-            'response': "I'm AlgoTrade Assistant - an AI-powered trading companion developed by Cancerian Capital.",
-            'priority': 1
-        }
-    }
     lower_query = query.lower()
 
     # Greeting check (unchanged)
@@ -976,16 +949,13 @@ def bold(text):
 
 
 def send_to_openrouter(payload, max_retries=3, retry_delay=5):
-    OPENPOUTER_API_KEY='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'
-    api_key = os.getenv('OPENROUTER_API_KEY') or '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'
+    api_key = os.getenv('OPENROUTER_API_KEY') or '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'
     if not api_key:
         return {"error": "API key not found. Please set OPENROUTER_API_KEY."}
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "<YOUR_SITE_URL>",
-        "X-Title": "<YOUR_SITE_NAME>"
+        "Content-Type": "application/json"
     }
     for attempt in range(max_retries):
         try:
@@ -1051,8 +1021,8 @@ def main_chatbot():
 
     # Initialize FivePaisaClient with provided credentials
     five_paisa_cred = {
-        "APP_NAME": "FIVEPAISA_APP_NAME",
-        "APP_SOURCE": "FIVEPAISA_APP_SOURCE",
+        "APP_NAME": "5P50289032",
+        "APP_SOURCE": "22145",
         "USER_ID": "jv0zaXaW7lD",
         "PASSWORD": "ZusnUUqsJoh",
         "USER_KEY": "24BLhwIxzMHo31rotJYypWuvYUU4mCHZ",
@@ -1062,7 +1032,7 @@ def main_chatbot():
 
     # Initialize NeoAPI with separate credentials
     neo_client = NeoAPI(
-        consumer_key="NEO_API_KEY",
+        consumer_key="fmHOCOoINQuyTfdB8S_aiiWMdlQa",
         consumer_secret="xjI_osC4q4r4zkWbFpq_Vgw4LTga",
         environment='prod',
         access_token=None,
