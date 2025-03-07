@@ -3,7 +3,7 @@ import sys
 import importlib
 
 # Define Virtual Environment Paths
-VENV_5PAISA = "/home/flappy/env_5paisa"
+VENV_5PAISA = "/home/ubuntu/env_5paisa"
 VENV_KOTAKNEO = "/home/ubuntu/env_kotakneo"
 
 # Function to activate a virtual environment by adding its site-packages to sys.path
@@ -48,8 +48,6 @@ from neo_api_client import NeoAPI
 from py5paisa import FivePaisaClient
 from collections import defaultdict
 from functools import lru_cache  # Added for caching
-from dotenv import load_dotenv
-load_dotenv()
 
 def safe_float(value, default=0.0):
     """Robust type-agnostic number conversion"""
@@ -752,7 +750,7 @@ def process_query(query, stock_data, five_paisa_client, neo_client):
     if re.search(greeting_pattern, lower_query) and len(query.split()) <= 3:
         return "Hello! I'm your Stock Analysis Chatbot. I can help you analyze financial data or place buy/sell orders for stocks in our database. To place an order, use 'place buy order for [quantity] shares of [stock]' or 'place sell order for [quantity] shares of [stock]'."
 
-    if lower_query.strip() == "deploy":
+    if lower_query.startswith("deploy"):
       return deploy_remote_script()
 
     # Forensic triggers (unchanged)
