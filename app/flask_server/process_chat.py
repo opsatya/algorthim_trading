@@ -1,19 +1,23 @@
 import os
 import sys
 import importlib
+import glob  # added for dynamic venv site-packages lookup
 
 # Define Virtual Environment Paths
-VENV_5PAISA = "/home/ubuntu/env_5paisa"
-VENV_KOTAKNEO = "/home/ubuntu/env_kotakneo"
+VENV_5PAISA = "/home/satya/env_5paisa"
+VENV_KOTAKNEO = "/home/satya/env_kotakneo"
 
 # Function to activate a virtual environment by adding its site-packages to sys.path
 def activate_venv(venv_path):
-    site_packages = os.path.join(venv_path, "lib", "python3.10", "site-packages")  # Adjust the Python version if needed
-    if os.path.exists(site_packages):
-        sys.path.insert(0, site_packages)
+    # Dynamically locate the site-packages directory inside the venv so we do not
+    # depend on the exact Python version (e.g., 3.10 vs 3.12)
+    possible_dirs = glob.glob(os.path.join(venv_path, "lib", "python*", "site-packages"))
+    if possible_dirs:
+        sys.path.insert(0, possible_dirs[0])
     else:
-        print(f"[ERROR] Virtual environment not found: {venv_path}")
+        print(f"[ERROR] Could not locate site-packages inside: {venv_path}")
         sys.exit(1)
+
 # Activate 5Paisa Virtual Environment and import py5paisa
 activate_venv(VENV_5PAISA)
 try:
@@ -38,7 +42,6 @@ import os
 import time
 import re
 import traceback
-import glob
 import pytz
 import paramiko
 import neo_api_client
@@ -48,6 +51,10 @@ from neo_api_client import NeoAPI
 from py5paisa import FivePaisaClient
 from collections import defaultdict
 from functools import lru_cache  # Added for caching
+from dotenv import load_dotenv  # NEW
+
+# Load variables from .env if present
+load_dotenv()
 
 def safe_float(value, default=0.0):
     """Robust type-agnostic number conversion"""
@@ -137,10 +144,10 @@ def get_current_price(five_paisa_client, scrip_data):
 
 def deploy_remote_script():
     # AWS EC2 Instance Details
-    EC2_HOST = "34.229.205.14"  # 🔹 Replace with your EC2 public IP
-    USERNAME = "ubuntu"      # 🔹 Replace with your EC2 username
-    KEY_PATH = "94463.pem"  # 🔹 Replace with your private key file path
-    REMOTE_SCRIPT = "/home/ubuntu/test13/hackathon/deployment.py"  # 🔹 Path of test4.py on EC2
+    EC2_HOST = "34.229.205.14"  # Replace with your EC2 public IP
+    USERNAME = "ubuntu"      # Replace with your EC2 username
+    KEY_PATH = "94463.pem"  # Replace with your private key file path
+    REMOTE_SCRIPT = "/home/ubuntu/test13/hackathon/deployment.py"  # Path of test4.py on EC2
 
     # Create an SSH client
     ssh = paramiko.SSHClient()
@@ -899,6 +906,7 @@ def process_query(query, stock_data, five_paisa_client, neo_client):
         return "I don't have information about this specific stock or query in my database. I can help you analyze stocks in my database. Could you ask about one of those instead?"
     else:
         return "I'm specialized in stock analysis based on my financial database. I don’t have information to answer this query. Could I help you with analyzing stocks in my database instead?"
+
 def generate_scoring_verdict(stock, year=None):
     if not year:
         year = max(stock['years'].keys(), default=None)
@@ -947,9 +955,11 @@ def bold(text):
 
 
 def send_to_openrouter(payload, max_retries=3, retry_delay=5):
-    api_key = os.getenv('OPENROUTER_API_KEY') or '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'
+    api_key = os.getenv("OPENROUTER_API_KEY")  # removed insecure fallback
     if not api_key:
-        return {"error": "API key not found. Please set OPENROUTER_API_KEY."}
+        raise RuntimeError(
+            "OPENROUTER_API_KEY not set. Export it in your shell or put it in a .env file."
+        )
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
