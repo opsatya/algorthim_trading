@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, Bot, Lock } from "lucide-react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../auth/AuthContext";
 import Button from "../ui/Button";
 import axiosInstance from '../utils/axiosConfig';
 import { io } from "socket.io-client";
@@ -19,18 +19,18 @@ const TypingIndicator = () => (
   </div>
 );
 
-export const ChatInterface = () => {
-  const { user, setIsAuthModalOpen, setAuthMode } = useAuth();
+export const ChatInterface = ({ openAuthModal }) => {
+  const { user, isAuthenticated, loading } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [typedPlaceholder, setTypedPlaceholder] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatId, setChatId] = useState(null);
   const [socket, setSocket] = useState(null);
-  const [streamingText, setStreamingText] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const messagesEndRef = useRef(null);
   
-  const fullPlaceholder = user 
+  const fullPlaceholder = isAuthenticated 
     ? "Ask anything about trading..." 
     : "Sign in to start chatting...";
     
@@ -43,7 +43,6 @@ export const ChatInterface = () => {
 
   // Format message content with code and table detection
   const formatResponse = (text) => {
-    // Check if text is a string
     if (typeof text !== 'string') return <p>Invalid message format</p>;
     
     const lines = text.split('\n');
@@ -116,114 +115,116 @@ export const ChatInterface = () => {
     return formattedContent;
   };
 
+  // Fetch chat history when user is authenticated
   useEffect(() => {
-    // Get chat history from API when user logs in
     const fetchChatHistory = async () => {
-      if (user) {
+      if (isAuthenticated && user) {
         try {
-          // If no chatId, fetch from general endpoint
+          // Try to get Firebase ID token for authentication
+          const token = await user.getIdToken();
+          
           const endpoint = chatId 
             ? `/chat/chats/${chatId}`
             : '/chat/history';
           
           const response = await axiosInstance.get(endpoint, {
             headers: {
-              'Authorization': `Bearer ${user.token}`
+              'Authorization': `Bearer ${token}`
             }
           });
+          
           setMessages(response.data.chats || []);
-          // Optionally set chatId if returned from API
           if (response.data.chatId) {
             setChatId(response.data.chatId);
           }
         } catch (error) {
           console.error('Error fetching chat history:', error);
-          if (error.response && error.response.status === 401) {
-            setIsAuthModalOpen(true);
-            setAuthMode('login');
-          }
+          // Don't automatically open auth modal, user might not have backend running
         }
       }
     };
     
     fetchChatHistory();
-  }, [user, chatId, setIsAuthModalOpen, setAuthMode]);
+  }, [isAuthenticated, user, chatId]);
 
-  // WebSocket setup
+  // WebSocket setup with better error handling
   useEffect(() => {
-    if (user) {
-      const newSocket = io('http://localhost:5000', { // Connect to Express server
-        path: '/socket.io',
-        transports: ['websocket'],
-        query: {
-          token: user.token
+    if (isAuthenticated && user) {
+      const connectWebSocket = async () => {
+        try {
+          const token = await user.getIdToken();
+          
+          const newSocket = io('http://localhost:5000', {
+            path: '/socket.io',
+            transports: ['websocket'],
+            query: { token }
+          });
+
+          newSocket.on('connect', () => {
+            console.log('Connected to WebSocket server');
+            setConnectionStatus('connected');
+          });
+
+          newSocket.on('disconnect', (reason) => {
+            console.log('Disconnected from WebSocket server:', reason);
+            setConnectionStatus('disconnected');
+          });
+
+          newSocket.on('connect_error', (error) => {
+            console.error('WebSocket connection error:', error);
+            setConnectionStatus('error');
+            // Add a user-friendly message
+            setMessages(prev => [...prev, { 
+              text: "⚠️ Backend server is not running. Please start the Node.js server on port 5000.", 
+              isUser: false,
+              isError: true
+            }]);
+          });
+
+          newSocket.on('ai_response', (response) => {
+            setIsLoading(false);
+            setMessages(prev => [...prev, { 
+              text: response.content, 
+              isUser: false 
+            }]);
+          });
+
+          newSocket.on('ai_error', (error) => {
+            console.error('AI service error:', error);
+            setIsLoading(false);
+            setMessages(prev => [...prev, { 
+              text: error.message || "AI service unavailable", 
+              isUser: false,
+              isError: true
+            }]);
+          });
+
+          setSocket(newSocket);
+          return () => newSocket.close();
+          
+        } catch (error) {
+          console.error('Error setting up WebSocket:', error);
+          setConnectionStatus('error');
         }
-      });
-
-      newSocket.on('connect', () => {
-        console.log('Connected to WebSocket server');
-      });
-
-      newSocket.on('disconnect', () => {
-        console.log('Disconnected from WebSocket server');
-      });
-
-      newSocket.on('ai_response', (response) => {
-        setIsLoading(false);
-        setMessages(prev => [...prev, { 
-          text: response.content, 
-          isUser: false 
-        }]);
-        
-        // For streaming effect (uncomment to enable)
-        // let currentText = '';
-        // const words = response.content.split(' ');
-        // const interval = setInterval(() => {
-        //   if(words.length === 0) {
-        //     clearInterval(interval);
-        //     return;
-        //   }
-        //   currentText += words.shift() + ' ';
-        //   setStreamingText(currentText);
-        // }, 50);
-      });
-
-      newSocket.on('error', (error) => {
-        console.error('WebSocket error:', error);
-        setIsLoading(false);
-        setMessages(prev => [...prev, { 
-          text: error.message || "AI service unavailable", 
-          isUser: false 
-        }]);
-      });
-
-      newSocket.on('message_response', (response) => {
-        if (response.status === 'success') {
-          // Handle successful response
-        } else {
-          // Handle error
-        }
-      });
-
-      setSocket(newSocket);
-
-      return () => newSocket.close();
+      };
+      
+      connectWebSocket();
     }
-  }, [user]);
+  }, [isAuthenticated, user]);
 
+  // Animate placeholder text
   useEffect(() => {
-    // Animate placeholder text
     let index = 0;
     const interval = setInterval(() => {
       setTypedPlaceholder(fullPlaceholder.slice(0, index + 1));
       index++;
       if (index === fullPlaceholder.length) clearInterval(interval);
-    }, 500);
+    }, 50); // Faster typing animation
     return () => clearInterval(interval);
   }, [fullPlaceholder]);
 
+  // Auto-scroll to bottom
   useEffect(() => {
-    // Enhanced scroll behavior
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
         behavior: 'smooth',
@@ -231,63 +232,91 @@ export const ChatInterface = () => {
         inline: 'start'
       });
     }
-  }, [messages, isLoading]); // Add isLoading as dependency
+  }, [messages, isLoading]);
 
   const handleSend = async () => {
-    if (!user) {
-      setIsAuthModalOpen(true);
-      setAuthMode('login');
+    if (!isAuthenticated || !user) {
+      openAuthModal('login');
       return;
     }
   
-    if (input.trim() && socket) {
-      console.log("Frontend -> Express:", input);
+    if (!input.trim()) return;
+
+    // Check if backend is available
+    if (connectionStatus === 'error' || connectionStatus === 'disconnected') {
+      setMessages(prev => [...prev, { 
+        text: "⚠️ Cannot send message: Backend server is not available. Please ensure the Node.js server is running on port 5000.", 
+        isUser: false,
+        isError: true
+      }]);
+      return;
+    }
+
+    if (socket) {
       const userMessage = { text: input, isUser: true };
       setMessages(prev => [...prev, userMessage]);
       setInput("");
       setIsLoading(true);
 
       try {
-        // Send message via WebSocket
         socket.emit('user_message', {
           content: input,
           chatId: chatId,
-          userId: user._id
+          userId: user.uid // Use Firebase UID
         });
       } catch (error) {
         console.error('Error sending message:', error);
         setIsLoading(false);
         setMessages(prev => [...prev, { 
-          text: error.message || "Connection error", 
-          isUser: false 
+          text: "Failed to send message: " + error.message, 
+          isUser: false,
+          isError: true
         }]);
       }
     }
   };
 
+  // Show loading spinner while Firebase auth is initializing
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto bg-black/20 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
+        <div className="h-[600px] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+        </div>
+      </div>
+    );
+  }
+
   const UnauthorizedState = () => (
     <div className="flex flex-col items-center justify-center h-full space-y-4 text-gray-400">
       <Lock className="w-12 h-12 text-violet-500" />
-      <p>Please sign in to start chatting with your AI trading assistant</p>
-      <div className="flex gap-4">
-        <Button
-          onClick={() => { 
-            setAuthMode("login"); 
-            setIsAuthModalOpen(true); 
-          }}
-          className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:opacity-90 transition-opacity"
-        >
-          Sign In
-        </Button>
-        <Button
-          onClick={() => { 
-            setAuthMode("signup"); 
-            setIsAuthModalOpen(true);
-          }}
-          variant="secondary"
-        >
-          Sign Up
-        </Button>
+      <h3 className="text-xl font-semibold text-white">Welcome to AI Trading Assistant</h3>
+      <p className="text-center max-w-md">
+        Sign in to access personalized trading insights, market analysis, and AI-powered investment recommendations.
+      </p>
+      
+      {/* Single Login Button */}
+      <Button
+        onClick={() => openAuthModal('login')}
+        className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:opacity-90 transition-all transform hover:scale-105 font-semibold"
+      >
+        🚀 Sign In to Get Started
+      </Button>
+      
+      {/* Features Preview */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="text-center p-3 bg-white/5 rounded-lg">
+          <Bot className="w-6 h-6 text-violet-400 mx-auto mb-2" />
+          <p>AI Market Analysis</p>
+        </div>
+        <div className="text-center p-3 bg-white/5 rounded-lg">
+          <span className="text-2xl block mb-2">📊</span>
+          <p>Real-time Data</p>
+        </div>
+        <div className="text-center p-3 bg-white/5 rounded-lg">
+          <span className="text-2xl block mb-2">💡</span>
+          <p>Smart Insights</p>
+        </div>
       </div>
     </div>
   );
@@ -295,7 +324,49 @@ export const ChatInterface = () => {
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center h-full space-y-4 text-gray-400">
       <Bot className="w-12 h-12 text-violet-500" />
-      <p>Start a conversation with your AI trading assistant</p>
+      <h3 className="text-xl font-semibold text-white">
+        Hello, {user?.displayName || user?.email?.split('@')[0]}! 👋
+      </h3>
+      <p className="text-center max-w-md">
+        I'm your AI trading assistant. Ask me about market trends, stock analysis, or investment strategies.
+      </p>
+      
+      {/* Connection Status */}
+      <div className="flex items-center gap-2 text-sm">
+        <div className={`w-2 h-2 rounded-full ${
+          connectionStatus === 'connected' ? 'bg-green-500' : 
+          connectionStatus === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+        }`}></div>
+        <span>
+          {connectionStatus === 'connected' ? 'Connected' : 
+           connectionStatus === 'error' ? 'Backend Offline' : 'Connecting...'}
+        </span>
+      </div>
+      
+      {/* Sample Questions */}
+      <div className="mt-6 space-y-2 text-sm">
+        <p className="text-gray-500">Try asking:</p>
+        <div className="space-y-1">
+          <button 
+            onClick={() => setInput("What are the top trending stocks today?")}
+            className="block text-left text-violet-400 hover:text-violet-300 transition-colors"
+          >
+            • "What are the top trending stocks today?"
+          </button>
+          <button 
+            onClick={() => setInput("Analyze Tesla's recent performance")}
+            className="block text-left text-violet-400 hover:text-violet-300 transition-colors"
+          >
+            • "Analyze Tesla's recent performance"
+          </button>
+          <button 
+            onClick={() => setInput("Should I invest in tech stocks right now?")}
+            className="block text-left text-violet-400 hover:text-violet-300 transition-colors"
+          >
+            • "Should I invest in tech stocks right now?"
+          </button>
+        </div>
+      </div>
     </div>
   );
 
@@ -304,7 +375,7 @@ export const ChatInterface = () => {
       <div className="h-[600px] flex flex-col">
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {!user ? (
+          {!isAuthenticated ? (
             <UnauthorizedState />
           ) : messages.length === 0 ? (
             <EmptyState />
@@ -317,7 +388,8 @@ export const ChatInterface = () => {
                 >
                   <div
                     className={`max-w-[85%] p-4 rounded-2xl ${
-                      msg.isUser ? messageStyles.user : messageStyles.bot
+                      msg.isUser ? messageStyles.user : 
+                      msg.isError ? "bg-red-500/20 border border-red-500/50" : messageStyles.bot
                     }`}
                   >
                     {formatResponse(msg.text)}
@@ -343,12 +415,12 @@ export const ChatInterface = () => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
               placeholder={typedPlaceholder}
-              disabled={!user || isLoading}
+              disabled={!isAuthenticated || isLoading}
               className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500/50 text-white placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleSend}
-              disabled={!user || isLoading || !input.trim()}
+              disabled={!isAuthenticated || isLoading || !input.trim()}
               className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5 text-white" />

@@ -85,7 +85,7 @@ def initialize_api_clients():
         if all(five_paisa_cred.values()):
             five_paisa_client = FivePaisaClient(cred=five_paisa_cred)
             
-            # Attempt login only if mandatory extra credentials are available
+            # Attempt login only if mandatory extra credentials are availablefive_paisa_cred
             if hasattr(five_paisa_client, "login") and five_paisa_email:
                 try:
                     # Some versions of py5paisa expect email & DOB set as attributes

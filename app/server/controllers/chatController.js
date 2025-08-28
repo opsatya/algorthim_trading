@@ -3,10 +3,16 @@ import { handleAsyncErrors } from '../middlewares/error.js';
 import { success, error } from '../utils/responseHandler.js';
 
 export const createChat = handleAsyncErrors(async (req, res) => {
+  const { sessionId, initialMessage } = req.body;
+  
+  if (!sessionId) {
+    return error(res, 'Session ID is required', 400);
+  }
+
   const newChat = await Chat.create({
-    userId: req.user._id,
-    messages: req.body.initialMessage ? [
-      { content: req.body.initialMessage, sender: 'user' }
+    sessionId,
+    messages: initialMessage ? [
+      { content: initialMessage, sender: 'user' }
     ] : []
   });
   
@@ -14,7 +20,13 @@ export const createChat = handleAsyncErrors(async (req, res) => {
 });
 
 export const getChats = handleAsyncErrors(async (req, res) => {
-  const chats = await Chat.find({ userId: req.user._id })
+  const { sessionId } = req.query;
+  
+  if (!sessionId) {
+    return error(res, 'Session ID is required', 400);
+  }
+
+  const chats = await Chat.find({ sessionId })
     .select('_id title lastUpdated')
     .sort({ lastUpdated: -1 });
   
@@ -22,9 +34,15 @@ export const getChats = handleAsyncErrors(async (req, res) => {
 });
 
 export const getChatById = handleAsyncErrors(async (req, res) => {
+  const { sessionId } = req.query;
+  
+  if (!sessionId) {
+    return error(res, 'Session ID is required', 400);
+  }
+
   const chat = await Chat.findOne({
     _id: req.params.chatId,
-    userId: req.user._id
+    sessionId
   });
   
   if (!chat) {
@@ -36,14 +54,14 @@ export const getChatById = handleAsyncErrors(async (req, res) => {
 
 export const addMessage = handleAsyncErrors(async (req, res) => {
   const { chatId } = req.params;
-  const { content, sender } = req.body;
+  const { content, sender, sessionId } = req.body;
   
-  if (!content || !sender) {
-    return error(res, 'Content and sender are required', 400);
+  if (!content || !sender || !sessionId) {
+    return error(res, 'Content, sender, and sessionId are required', 400);
   }
   
   const chat = await Chat.findOneAndUpdate(
-    { _id: chatId, userId: req.user._id },
+    { _id: chatId, sessionId },
     {
       $push: { messages: { content, sender } },
       $set: { lastUpdated: Date.now() }
@@ -60,14 +78,14 @@ export const addMessage = handleAsyncErrors(async (req, res) => {
 
 export const updateChatTitle = handleAsyncErrors(async (req, res) => {
   const { chatId } = req.params;
-  const { title } = req.body;
+  const { title, sessionId } = req.body;
   
-  if (!title) {
-    return error(res, 'Title is required', 400);
+  if (!title || !sessionId) {
+    return error(res, 'Title and sessionId are required', 400);
   }
   
   const chat = await Chat.findOneAndUpdate(
-    { _id: chatId, userId: req.user._id },
+    { _id: chatId, sessionId },
     { $set: { title } },
     { new: true }
   );
@@ -81,10 +99,15 @@ export const updateChatTitle = handleAsyncErrors(async (req, res) => {
 
 export const deleteChat = handleAsyncErrors(async (req, res) => {
   const { chatId } = req.params;
+  const { sessionId } = req.query;
+  
+  if (!sessionId) {
+    return error(res, 'Session ID is required', 400);
+  }
   
   const result = await Chat.deleteOne({
     _id: chatId,
-    userId: req.user._id
+    sessionId
   });
   
   if (result.deletedCount === 0) {

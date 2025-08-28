@@ -1,61 +1,57 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../auth/AuthContext';
 import Button from '../ui/Button';
 
-const AuthModal = () => {
+const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
   const { 
-    isAuthModalOpen, 
-    setIsAuthModalOpen, 
-    authMode, 
-    setAuthMode, 
-    login, 
-    signup, 
-    verifyOTP 
+    loginWithGoogle, 
+    loginWithGithub, 
+    loginWithEmail, 
+    signUpWithEmail,
+    loading, 
+    error, 
+    clearError 
   } = useAuth();
   
+  const [authMode, setAuthMode] = useState(initialMode);
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
-  
-  const [showOTPInput, setShowOTPInput] = useState(false);
-  const [otp, setOTP] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [pendingLoginAfterOTP, setPendingLoginAfterOTP] = useState(false);
 
   const validateForm = () => {
-    setError('');
+    setLocalError('');
+    clearError();
     
     if (authMode === 'signup') {
-      if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
-        setError('All fields are required');
+      if (!formData.email || !formData.password || !formData.confirmPassword) {
+        setLocalError('All fields are required');
         return false;
       }
       
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        setLocalError('Passwords do not match');
         return false;
       }
       
       if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters');
+        setLocalError('Password must be at least 6 characters');
         return false;
       }
       
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        setError('Please enter a valid email address');
+        setLocalError('Please enter a valid email address');
         return false;
       }
     } else {
       if (!formData.email || !formData.password) {
-        setError('Email and password are required');
+        setLocalError('Email and password are required');
         return false;
       }
     }
@@ -68,109 +64,84 @@ const AuthModal = () => {
     
     if (!validateForm()) return;
     
-    setLoading(true);
-    setError('');
+    setLocalError('');
+    setSuccessMessage('');
     
     try {
       if (authMode === 'signup') {
-        const response = await signup({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password
-        });
-        
-        if (response.success) {
-          setSuccessMessage('OTP sent to your email');
-          setShowOTPInput(true);
-          setPendingLoginAfterOTP(true);
-        } else {
-          setError(response.message);
-        }
+        await signUpWithEmail(formData.email, formData.password);
+        setSuccessMessage('Account created successfully!');
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       } else {
-        const response = await login({
-          email: formData.email,
-          password: formData.password
-        });
-        
-        if (response.success) {
-          setIsAuthModalOpen(false);
-        } else {
-          if (response.message === 'Email not verified' && response.requireVerification) {
-            setSuccessMessage('Please verify your email first');
-            setShowOTPInput(true);
-          } else {
-            setError(response.message);
-          }
-        }
+        await loginWithEmail(formData.email, formData.password);
+        setSuccessMessage('Signed in successfully!');
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      // Error is already handled in AuthContext
       console.error('Auth error:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleOTPSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!otp) {
-      setError('Please enter the OTP');
-      return;
-    }
-    
-    setLoading(true);
-    setError('');
-    
+  const handleGoogleLogin = async () => {
     try {
-      const response = await verifyOTP(formData.email, otp);
-      
-      if (response.success) {
-        setSuccessMessage('Account verified successfully');
-        
-        // If we need to login after verification
-        if (pendingLoginAfterOTP) {
-          const loginResponse = await login({
-            email: formData.email,
-            password: formData.password
-          });
-          
-          if (loginResponse.success) {
-            setTimeout(() => {
-              setIsAuthModalOpen(false);
-            }, 1500);
-          } else {
-            setError(loginResponse.message);
-          }
-        } else {
-          setTimeout(() => {
-            setIsAuthModalOpen(false);
-          }, 1500);
-        }
-      } else {
-        setError(response.message);
-      }
+      setLocalError('');
+      clearError();
+      await loginWithGoogle();
+      setSuccessMessage('Signed in with Google successfully!');
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err) {
-      setError('An unexpected error occurred');
-      console.error('OTP verification error:', err);
-    } finally {
-      setLoading(false);
+      console.error('Google login error:', err);
+    }
+  };
+
+  const handleGithubLogin = async () => {
+    try {
+      setLocalError('');
+      clearError();
+      await loginWithGithub();
+      setSuccessMessage('Signed in with GitHub successfully!');
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+    } catch (err) {
+      console.error('GitHub login error:', err);
     }
   };
 
   const handleBack = () => {
-    if (showOTPInput) {
-      setShowOTPInput(false);
-      setOTP('');
-      setPendingLoginAfterOTP(false);
-    } else {
-      setIsAuthModalOpen(false);
-    }
-    setError('');
+    onClose();
+    setLocalError('');
     setSuccessMessage('');
+    clearError();
+    setFormData({
+      email: '',
+      password: '',
+      confirmPassword: '',
+    });
   };
 
-  if (!isAuthModalOpen) return null;
+  const switchMode = () => {
+    setAuthMode(authMode === 'login' ? 'signup' : 'login');
+    setLocalError('');
+    setSuccessMessage('');
+    clearError();
+    setFormData({
+      email: '',
+      password: '',
+      confirmPassword: '',
+    });
+  };
+
+  if (!isOpen) return null;
+
+  const displayError = localError || error;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -185,12 +156,12 @@ const AuthModal = () => {
         </button>
 
         <h2 className="text-2xl font-bold text-white mb-6 text-center">
-          {showOTPInput ? 'Enter OTP' : authMode === 'login' ? 'Sign In' : 'Sign Up'}
+          {authMode === 'login' ? 'Sign In' : 'Sign Up'}
         </h2>
         
-        {error && (
+        {displayError && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300">
-            {error}
+            {displayError}
           </div>
         )}
         
@@ -200,149 +171,104 @@ const AuthModal = () => {
           </div>
         )}
 
-        {showOTPInput ? (
-          <form onSubmit={handleOTPSubmit} className="space-y-4">
-            <div>
-              <label className="block text-gray-400 mb-2">Enter the 6-digit OTP sent to your email</label>
+        {/* Social Login Buttons - Moved to top */}
+        <div className="space-y-3 mb-6">
+          <Button
+            variant="secondary"
+            fullWidth
+            icon={<span className="w-5 h-5 flex items-center justify-center text-red-500 font-bold">G</span>}
+            onClick={handleGoogleLogin}
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Continue with Google'}
+          </Button>
+          <Button
+            variant="secondary"
+            fullWidth
+            icon={<span className="w-5 h-5 flex items-center justify-center">⚡</span>}
+            onClick={handleGithubLogin}
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Continue with GitHub'}
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-4 my-6">
+          <div className="flex-1 border-t border-white/10"></div>
+          <span className="text-gray-400">or</span>
+          <div className="flex-1 border-t border-white/10"></div>
+        </div>
+
+        {/* Email/Password Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-400 mb-2">Email</label>
+            <div className="relative">
               <input
-                type="text"
-                value={otp}
-                onChange={(e) => {
-                  
-                  const value = e.target.value.replace(/[^0-9]/g, '');  
-                  if (value.length <= 6) setOTP(value);
-                }}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-                placeholder="Enter OTP"
-                maxLength={6}
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                placeholder="Enter your email"
+                disabled={loading}
               />
+              <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
             </div>
-            <Button 
-              type="submit" 
-              variant="primary" 
-              fullWidth
-              disabled={loading}
-            >
-              {loading ? 'Verifying...' : 'Verify OTP'}
-            </Button>
-          </form>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {authMode === 'signup' && (
-              <div>
-                <label className="block text-gray-400 mb-2">Username</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-                    placeholder="Enter username"
-                  />
-                  <User className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-            )}
+          </div>
 
-            <div>
-              <label className="block text-gray-400 mb-2">{authMode === 'login' ? 'Username or Email' : 'Email'}</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-                  placeholder={authMode === 'login' ? "Enter username or email" : "Enter email"}
-                />
-                <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-              </div>
+          <div>
+            <label className="block text-gray-400 mb-2">Password</label>
+            <div className="relative">
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                placeholder="Enter your password"
+                disabled={loading}
+              />
+              <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
             </div>
+          </div>
 
+          {authMode === 'signup' && (
             <div>
-              <label className="block text-gray-400 mb-2">Password</label>
+              <label className="block text-gray-400 mb-2">Confirm Password</label>
               <div className="relative">
                 <input
                   type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-                  placeholder="Enter password"
+                  placeholder="Confirm your password"
+                  disabled={loading}
                 />
                 <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
               </div>
             </div>
+          )}
 
-            {authMode === 'signup' && (
-              <div>
-                <label className="block text-gray-400 mb-2">Confirm Password</label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-                    placeholder="Confirm password"
-                  />
-                  <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-            )}
+          <Button 
+            type="submit" 
+            variant="primary" 
+            fullWidth
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : (authMode === 'login' ? 'Sign In' : 'Create Account')}
+          </Button>
 
-            <Button 
-              type="submit" 
-              variant="primary" 
-              fullWidth
+          <p className="text-center text-gray-400 mt-4">
+            {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}
+            <button
+              type="button"
+              onClick={switchMode}
+              className="ml-2 text-violet-500 hover:text-violet-400 cursor-pointer"
               disabled={loading}
             >
-              {loading ? 'Processing...' : (authMode === 'login' ? 'Sign In' : 'Sign Up')}
-            </Button>
-
-            <div className="flex items-center gap-4 my-4">
-              <div className="flex-1 border-t border-white/10"></div>
-              <span className="text-gray-400">or</span>
-              <div className="flex-1 border-t border-white/10"></div>
-            </div>
-
-            <div className="space-y-3">
-              <Button
-                variant="secondary"
-                fullWidth
-                icon={<span className="w-5 h-5 flex items-center justify-center">G</span>}
-                disabled
-              >
-                Continue with Google
-              </Button>
-              <Button
-                variant="secondary"
-                fullWidth
-                icon={<span className="w-5 h-5 flex items-center justify-center">GH</span>}
-                disabled
-              >
-                Continue with GitHub
-              </Button>
-            </div>
-
-            <p className="text-center text-gray-400 mt-4">
-              {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode(authMode === 'login' ? 'signup' : 'login');
-                  setError('');
-                  setFormData({
-                    username: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: '',
-                  });
-                }}
-                className="ml-2 text-violet-500 hover:text-violet-400 cursor-pointer"
-              >
-                {authMode === 'login' ? 'Sign Up' : 'Sign In'}
-              </button>
-            </p>
-          </form>
-        )}
+              {authMode === 'login' ? 'Sign Up' : 'Sign In'}
+            </button>
+          </p>
+        </form>
       </div>
     </div>
   );
