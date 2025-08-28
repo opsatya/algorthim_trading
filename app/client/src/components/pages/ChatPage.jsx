@@ -1,19 +1,22 @@
 import { ChatHeader } from "../chat/ChatHeader";
 import { ChatInterface } from "../chat/ChatInterface";
 import { useUser } from "@clerk/clerk-react";
+import { useState } from "react";
 
 const ChatPage = () => {
   const { user } = useUser();
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-800 animate-gradient">
-      <ChatHeader />
+      <ChatHeader isStreaming={isStreaming} isDemoMode={isDemoMode} />
       <main className="pt-24 px-4 pb-8">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Main Chat Area */}
             <div className="lg:col-span-3">
-              <ChatInterface />
+              <ChatInterface onStreamingChange={setIsStreaming} onDemoModeChange={setIsDemoMode} />
             </div>
             
             {/* Sidebar */}

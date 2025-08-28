@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
+import { SignInButton, useUser } from '@clerk/clerk-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isSignedIn } = useUser();
   
   const scrollToSection = (sectionId) => {
     // Remove the # if it's included
@@ -53,6 +55,25 @@ const Navbar = () => {
                   {item.name}
                 </a>
               ))}
+              
+              {/* Sign In/User Menu */}
+              {isSignedIn ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-300">Welcome, {user?.firstName || 'User'}</span>
+                  <a
+                    href="/chat"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+                  >
+                    Go to Chat
+                  </a>
+                </div>
+              ) : (
+                <SignInButton mode="modal">
+                  <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                    Sign In
+                  </button>
+                </SignInButton>
+              )}
             </div>
           </div>
           
@@ -115,6 +136,29 @@ const Navbar = () => {
                 {item.name}
               </a>
             ))}
+            
+            {/* Mobile Sign In/User Menu */}
+            {isSignedIn ? (
+              <>
+                <div className="px-3 py-2 text-base font-medium text-gray-300">
+                  Welcome, {user?.firstName || 'User'}
+                </div>
+                <a
+                  href="/chat"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-blue-400 hover:text-blue-300 hover:bg-black/20 transition-colors duration-200"
+                >
+                  Go to Chat
+                </a>
+              </>
+            ) : (
+              <div className="px-3 py-2">
+                <SignInButton mode="modal">
+                  <button className="w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition-opacity">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </div>
+            )}
           </div>
         </div>
       </div>

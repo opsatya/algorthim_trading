@@ -1,7 +1,7 @@
 import { History, Bell, Settings } from "lucide-react";
 import { UserButton } from "@clerk/clerk-react";
 
-export const ChatHeader = () => {
+export const ChatHeader = ({ isStreaming = false, isDemoMode = false }) => {
   return (
     <div className="fixed top-0 w-full z-50 backdrop-blur-md bg-black/20 border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4">
@@ -10,6 +10,18 @@ export const ChatHeader = () => {
             <span className="text-xl font-bold bg-gradient-to-r from-blue-500 to-violet-500 bg-clip-text text-transparent">
               Cancerian Capital
             </span>
+            {isDemoMode && (
+              <div className="flex items-center gap-2 text-sm text-violet-400">
+                <div className="w-2 h-2 bg-violet-500 rounded-full"></div>
+                <span>Demo Mode</span>
+              </div>
+            )}
+            {isStreaming && (
+              <div className="flex items-center gap-2 text-sm text-violet-400">
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse"></div>
+                <span>AI responding...</span>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
