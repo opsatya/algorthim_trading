@@ -113,7 +113,7 @@ export const ChatInterface = ({ onStreamingChange, onDemoModeChange }) => {
   // WebSocket setup
   useEffect(() => {
     if (user) {
-      const newSocket = io('http://localhost:5000', {
+      const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
         path: '/socket.io',
         transports: ['websocket'],
         query: { sessionId }

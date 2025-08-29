@@ -14,7 +14,7 @@ const server = createServer(app);
 // Configure Socket.IO server
 const io = new Server(server, {
   cors: { 
-    origin: process.env.FRONTEND_URL || "http://localhost:5173", 
+    origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "http://localhost:5173", 
     credentials: true,
     methods: ["GET", "POST"]
   },
@@ -27,7 +27,8 @@ const io = new Server(server, {
 // Flask WebSocket configuration
 let flaskSocket = null;
 const connectToFlask = () => {
-  flaskSocket = ClientIO("http://127.0.0.1:5001", {
+  const flaskUrl = process.env.FLASK_URL || "http://127.0.0.1:5001";
+  flaskSocket = ClientIO(flaskUrl, {
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 3000,
@@ -83,7 +84,7 @@ connectToFlask();
 // Express middleware setup
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']

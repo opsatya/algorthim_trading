@@ -8,8 +8,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required for Node.js'",
+    "render-build": "echo 'Build completed'"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },  
   "dependencies": {
     "axios": "^1.8.1",
     "cors": "^2.8.5",

@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:prod": "vite build",
+    "preview:prod": "vite preview --port 4173",
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.45.0",

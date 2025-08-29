@@ -3,6 +3,7 @@ node_modules/
   
 # Ignore environment files
 .env
+.env.production
 
 # Ignore logs and temp files
 logs/

@@ -10,10 +10,22 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:5000',        changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          clerk: ['@clerk/clerk-react'],
+          socket: ['socket.io-client']
+        }
       }
     }
   }

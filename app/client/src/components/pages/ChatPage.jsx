@@ -27,7 +27,9 @@ const ChatPage = () => {
                   Get AI-powered insights for your trading decisions.
                 </p>
                 <div className="space-y-2 text-sm text-gray-400">
-                  <p>• Ask about stock analysis</p>
+                  <p>• Ask about stock analysHello! I'm your Stock Analysis Chatbot. I can help you analyze financial data or place buy/sell orders for stocks in our database. To place an order, use 'place buy order for [quantity] shares of [stock]' or 'place sell order for [quantity] shares of [stock]'.
+
+is</p>
                   <p>• Get market insights</p>
                   <p>• Place trading orders</p>
                 </div>
