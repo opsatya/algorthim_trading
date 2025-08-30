@@ -18,24 +18,6 @@ def activate_venv(venv_path):
         print(f"[ERROR] Could not locate site-packages inside: {venv_path}")
         sys.exit(1)
 
-# Activate 5Paisa Virtual Environment and import py5paisa
-activate_venv(VENV_5PAISA)
-try:
-    py5paisa = importlib.import_module("py5paisa")
-    FivePaisaClient = py5paisa.FivePaisaClient
-except ModuleNotFoundError:
-    print("[ERROR] py5paisa module not found. Install it inside env_5paisa.")
-    sys.exit(1)
-
-# Activate Kotak Neo Virtual Environment and import neo_api_client
-activate_venv(VENV_KOTAKNEO)
-try:
-    neo_api_client = importlib.import_module("neo_api_client")
-    NeoAPI = neo_api_client.NeoAPI
-except ModuleNotFoundError:
-    print("[ERROR] neo_api_client module not found. Install it inside env_kotakneo.")
-    sys.exit(1)
-
 import json
 import requests
 import os
