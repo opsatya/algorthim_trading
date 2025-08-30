@@ -10,3 +10,4 @@ Flask-CORS
 python-Levenshtein
 pandas
 numpy
+gunicorn==21.2.0

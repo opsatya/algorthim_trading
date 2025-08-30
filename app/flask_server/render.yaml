@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: algorithmic-trading-flask
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main_async.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: OPENROUTER_API_KEY
+        value: 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
+      # Add your other environment variables here as needed
