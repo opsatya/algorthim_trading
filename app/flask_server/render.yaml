@@ -3,11 +3,17 @@ services:
     name: algorithmic-trading-flask
     runtime: python
     plan: free
+    rootDir: flask_server
     buildCommand: pip install -r requirements.txt
-    startCommand: python main_async.py
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT main:app
     envVars:
-      - key: FLASK_ENV
+      - key: NODE_ENV
         value: production
+      - key: FRONTEND_URL
+        sync: false
+      - key: NODE_BACKEND_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
       - key: OPENROUTER_API_KEY
-        value: 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
-      # Add your other environment variables here as needed
+        sync: false
